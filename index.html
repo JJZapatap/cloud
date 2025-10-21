@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ciénaga INN ★★★ - Registro de Huéspedes</title>
+  <style>
+    /* =======================
+       ESTILOS GLOBALES
+    ======================== */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0077b6, #00b4d8);
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.9);
+      width: 100%;
+      text-align: center;
+      padding: 20px 0;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      color: #023e8a;
+      margin: 0;
+      font-size: 2em;
+    }
+
+    main {
+      background: #fff;
+      margin-top: 20px;
+      padding: 20px 30px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 900px;
+    }
+
+    h2 {
+      color: #0096c7;
+      border-bottom: 2px solid #0096c7;
+      padding-bottom: 5px;
+    }
+
+    /* =======================
+       FORMULARIO
+    ======================== */
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input, select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1em;
+      width: 100%;
+    }
+
+    button {
+      background-color: #0096c7;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #0077b6;
+    }
+
+    .btn-eliminar {
+      background-color: #d90429;
+    }
+
+    .btn-eliminar:hover {
+      background-color: #b00020;
+    }
+
+    .btn-editar {
+      background-color: #ffb703;
+      color: #000;
+    }
+
+    /* =======================
+       TABLA
+    ======================== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+
+    th {
+      background-color: #0096c7;
+      color: #fff;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    footer {
+      margin-top: auto;
+      text-align: center;
+      padding: 15px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Hotel Ciénaga INN ★★★</h1>
+    <p>Registro y gestión de huéspedes</p>
+  </header>
+
+  <main>
+    <h2>Formulario de Registro</h2>
+    <form id="formRegistro">
+      <div>
+        <label for="nombre">Nombre Completo:</label>
+        <input type="text" id="nombre" required>
+      </div>
+      <div>
+        <label for="cedula">Cédula:</label>
+        <input type="text" id="cedula" required>
+      </div>
+      <div>
+        <label for="habitacion">Habitación:</label>
+        <select id="habitacion" required>
+          <option value="">Seleccione...</option>
+          <option value="101">101</option>
+          <option value="102">102</option>
+          <option value="103">103</option>
+          <option value="201">201</option>
+          <option value="202">202</option>
+          <option value="203">203</option>
+        </select>
+      </div>
+      <div>
+        <label for="dias">Días de Estancia:</label>
+        <input type="number" id="dias" min="1" required>
+      </div>
+      <div style="grid-column: span 2; text-align:center;">
+        <button type="submit" id="btnGuardar">Registrar Huésped</button>
+      </div>
+    </form>
+
+    <h2>Lista de Huéspedes Registrados</h2>
+    <table id="tablaHuespedes">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Cédula</th>
+          <th>Habitación</th>
+          <th>Días</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+
+  <footer>
+    © 2025 Hotel Ciénaga INN ★★★ | Desarrollado por JJ Zapata
+  </footer>
+
+  <script>
+    // ===========================
+    // CRUD con LocalStorage
+    // ===========================
+    let huespedes = JSON.parse(localStorage.getItem("huespedes")) || [];
+    const form = document.getElementById("formRegistro");
+    const tabla = document.querySelector("#tablaHuespedes tbody");
+    let editIndex = null;
+
+    // Renderizar tabla
+    function mostrarHuespedes() {
+      tabla.innerHTML = "";
+      huespedes.forEach((h, i) => {
+        const fila = `
+          <tr>
+            <td>${h.nombre}</td>
+            <td>${h.cedula}</td>
+            <td>${h.habitacion}</td>
+            <td>${h.dias}</td>
+            <td>
+              <button class="btn-editar" onclick="editarHuesped(${i})">Editar</button>
+              <button class="btn-eliminar" onclick="eliminarHuesped(${i})">Eliminar</button>
+            </td>
+          </tr>
+        `;
+        tabla.innerHTML += fila;
+      });
+    }
+
+    // Guardar o actualizar
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const nuevo = {
+        nombre: document.getElementById("nombre").value.trim(),
+        cedula: document.getElementById("cedula").value.trim(),
+        habitacion: document.getElementById("habitacion").value,
+        dias: document.getElementById("dias").value
+      };
+
+      if (editIndex === null) {
+        huespedes.push(nuevo);
+      } else {
+        huespedes[editIndex] = nuevo;
+        editIndex = null;
+        document.getElementById("btnGuardar").textContent = "Registrar Huésped";
+      }
+
+      localStorage.setItem("huespedes", JSON.stringify(huespedes));
+      form.reset();
+      mostrarHuespedes();
+    });
+
+    // Editar huésped
+    function editarHuesped(i) {
+      const h = huespedes[i];
+      document.getElementById("nombre").value = h.nombre;
+      document.getElementById("cedula").value = h.cedula;
+      document.getElementById("habitacion").value = h.habitacion;
+      document.getElementById("dias").value = h.dias;
+      document.getElementById("btnGuardar").textContent = "Actualizar Huésped";
+      editIndex = i;
+    }
+
+    // Eliminar huésped
+    function eliminarHuesped(i) {
+      if (confirm("¿Deseas eliminar este registro?")) {
+        huespedes.splice(i, 1);
+        localStorage.setItem("huespedes", JSON.stringify(huespedes));
+        mostrarHuespedes();
+      }
+    }
+
+    mostrarHuespedes();
+  </script>
+
+</body>
+</html>
